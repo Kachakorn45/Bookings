@@ -592,7 +592,7 @@
             bookingForm.reset();
             courseNameAutoInput.value = '';
             serviceEmpNameInput.value = '';
-bookingEmpNameInput.value = '';
+            bookingEmpNameInput.value = '';
             timeUsedInput.value = '';
             commissionInput.value = '';
             editingRowIndex = null; // Clear editing state
@@ -669,8 +669,9 @@ bookingEmpNameInput.value = '';
             }
 
             const params = new URLSearchParams(formData).toString();
-            // IMPORTANT: Replace this URL with your actual Google Apps Script Web App URL
-            const jsonpUrl = `https://script.google.com/macros/s/AKfycbyA3xtzZ7T_-5F_xnRlnyjragIe3_PcCldHCdlsaxDcQSaDWAjm-G7YrcNZW94FginKIw/exec?callback=handleResponse&action=${action}&${params}`;
+            // *** สำคัญมาก: โปรดแทนที่ URL นี้ด้วย Web App URL จริงของคุณจาก Google Apps Script ***
+            const appsScriptUrl = 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE'; // ตัวอย่าง: 'https://script.google.com/macros/s/AKfycbyA3xtzZ7T_-5F_xnRlnyjragIe3_PcCldHCdlsaxDcQSaDWAjm-G7YrcNZW94FginKIw/exec';
+            const jsonpUrl = `${appsScriptUrl}?callback=handleResponse&action=${action}&${params}`;
 
             const script = document.createElement('script');
             script.src = jsonpUrl;
@@ -693,8 +694,9 @@ bookingEmpNameInput.value = '';
         window.searchBookings = function(query) {
             searchResultsTableBody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-gray-500">กำลังค้นหาข้อมูล...</td></tr>`;
 
-            // IMPORTANT: Replace this URL with your actual Google Apps Script Web App URL
-            const jsonpUrl = `https://script.google.com/macros/s/AKfycbyA3xtzZ7T_-5F_xnRlnyjragIe3_PcCldHCdlsaxDcQSaDWAjm-G7YrcNZW94FginKIw/exec?callback=handleSearchResults&action=searchBookings&query=${encodeURIComponent(query)}`;
+            // *** สำคัญมาก: โปรดแทนที่ URL นี้ด้วย Web App URL จริงของคุณจาก Google Apps Script ***
+            const appsScriptUrl = 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE'; // ตัวอย่าง: 'https://script.google.com/macros/s/AKfycbyA3xtzZ7T_-5F_xnRlnyjragIe3_PcCldHCdlsaxDcQSaDWAjm-G7YrcNZW94FginKIw/exec';
+            const jsonpUrl = `${appsScriptUrl}?callback=handleSearchResults&action=searchBookings&query=${encodeURIComponent(query)}`;
 
             const script = document.createElement('script');
             script.src = jsonpUrl;
