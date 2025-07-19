@@ -670,7 +670,7 @@
 
             const params = new URLSearchParams(formData).toString();
             // *** สำคัญมาก: โปรดแทนที่ URL นี้ด้วย Web App URL จริงของคุณจาก Google Apps Script ***
-            const appsScriptUrl = 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE'; // ตัวอย่าง: 'https://script.google.com/macros/s/AKfycbyA3xtzZ7T_-5F_xnRlnyjragIe3_PcCldHCdlsaxDcQSaDWAjm-G7YrcNZW94FginKIw/exec';
+            const appsScriptUrl = 'https://script.google.com/macros/s/AKfycbyA3xtzZ7T_-5F_xnRlnyjragIe3_PcCldHCdlsaxDcQSaDWAjm-G7YrcNZW94FginKIw/exec'; // ตัวอย่าง: 'https://script.google.com/macros/s/AKfycbyA3xtzZ7T_-5F_xnRlnyjragIe3_PcCldHCdlsaxDcQSaDWAjm-G7YrcNZW94FginKIw/exec';
             const jsonpUrl = `${appsScriptUrl}?callback=handleResponse&action=${action}&${params}`;
 
             const script = document.createElement('script');
