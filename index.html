@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แบบฟอร์มบันทึกการจองสปา</title>
+    <!-- Tailwind CSS CDN สำหรับการจัดสไตล์ที่ตอบสนองต่อทุกอุปกรณ์ -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SweetAlert2 CDN สำหรับการแจ้งเตือนที่สวยงาม -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Google Fonts: Inter สำหรับรูปแบบตัวอักษร -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* กำหนดรูปแบบตัวอักษรและรูปภาพพื้นหลัง */
+        body {
+            font-family: 'Inter', sans-serif;
+            /* รูปภาพพื้นหลัง: สามารถเปลี่ยน URL นี้เป็นรูปภาพสปาที่คุณต้องการได้ */
+            background-image: url('https://placehold.co/1920x1080/F5F5DC/000000?text=Your+Spa+Background+Image+Here');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed; /* ทำให้พื้นหลังอยู่กับที่เมื่อเลื่อนหน้าจอ */
+        }
+        /* สีพื้นหลังสำหรับส่วนหัว (Déja Vu Blue) */
+        .header-bg {
+            background-color: #2e5283;
+        }
+        /* สีพื้นหลังสำหรับส่วนเนื้อหาหลัก (Misted Marigold) */
+        .body-bg {
+            background-color: #e3bd33;
+        }
+        /* สไตล์สำหรับคอนเทนเนอร์ฟอร์ม: เพิ่มความโปร่งใสและเบลอพื้นหลัง */
+        .form-container {
+            backdrop-filter: blur(8px); /* ทำให้พื้นหลังเบลอ */
+            background-color: rgba(255, 255, 255, 0.8); /* สีขาวโปร่งใสเพื่อให้อ่านง่าย */
+        }
+        /* ปรับสีไอคอนปฏิทินใน input type="date" ให้เข้ากับธีม */
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1); /* ทำให้ไอคอนเป็นสีขาว */
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+    <div class="w-full max-w-4xl rounded-xl shadow-lg overflow-hidden form-container">
+        <!-- ส่วนหัวของฟอร์ม -->
+        <div class="header-bg text-white p-6 rounded-t-xl">
+            <h1 class="text-3xl font-bold text-center">แบบฟอร์มบันทึกการจองสปา</h1>
+            <p class="text-center mt-2 text-lg">กรุณากรอกข้อมูลการจองให้ครบถ้วน</p>
+        </div>
+
+        <!-- ส่วนฟอร์มหลัก -->
+        <div class="body-bg p-8 space-y-6 rounded-b-xl">
+            <form id="bookingForm" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- แถวที่ 1: วันที่ & ชื่อลูกค้า -->
+                <div>
+                    <label for="bookingDate" class="block text-gray-800 text-sm font-semibold mb-2">วันที่:</label>
+                    <input type="date" id="bookingDate" name="bookingDate" class="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2e5283]" required>
+                </div>
+                <div>
+                    <label for="customerName" class="block text-gray-800 text-sm font-semibold mb-2">ชื่อลูกค้า:</label>
+                    <input type="text" id="customerName" name="customerName" placeholder="กรอกชื่อลูกค้า" class="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2e5283]" required>
+                </div>
+
+                <!-- แถวที่ 2: เบอร์ติดต่อ & Dropdown รหัสคอร์ส -->
+                <div>
+                    <label for="contactNumber" class="block text-gray-800 text-sm font-semibold mb-2">เบอร์ติดต่อ:</label>
+                    <input type="tel" id="contactNumber" name="contactNumber" placeholder="กรอกเบอร์ติดต่อ" class="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2e5283]" required>
+                </div>
+                <div>
+                    <label for="courseCodeSelect" class="block text-gray-800 text-sm font-semibold mb-2">รหัสคอร์สที่จอง:</label>
+                    <select id="courseCodeSelect" name="courseCode" class="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2e5283]" required>
+                        <option value="">เลือกรหัสคอร์ส</option>
+                        <!-- ตัวเลือกจะถูกสร้างโดย JavaScript -->
+                    </select>
+                </div>
+
+                <!-- แถวที่ 3: ชื่อคอร์ส (อัตโนมัติ) & รหัสพนักงานให้บริการ -->
+                <div>
+                    <label for="courseNameAuto" class="block text-gray-800 text-sm font-semibold mb-2">ชื่อคอร์ส:</label>
+                    <input type="text" id="courseNameAuto" name="courseNameAuto" class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300 cursor-not-allowed" readonly>
+                </div>
+                <div>
+                    <label for="serviceEmpId" class="block text-gray-800 text-sm font-semibold mb-2">รหัสพนักงานให้บริการ:</label>
+                    <input type="text" id="serviceEmpId" name="serviceEmpId" placeholder="กรอกรหัสพนักงาน" class="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2e5283]" required>
+                </div>
+
+                <!-- แถวที่ 4: ชื่อพนักงานให้บริการ (อัตโนมัติ) & เวลาที่ใช้ (อัตโนมัติ) -->
+                <div>
+                    <label for="serviceEmpName" class="block text-gray-800 text-sm font-semibold mb-2">ชื่อพนักงานให้บริการ:</label>
+                    <input type="text" id="serviceEmpName" name="serviceEmpName" class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300 cursor-not-allowed" readonly>
+                </div>
+                <div>
+                    <label for="timeUsed" class="block text-gray-800 text-sm font-semibold mb-2">เวลาที่ใช้ (นาที):</label>
+                    <input type="text" id="timeUsed" name="timeUsed" class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300 cursor-not-allowed" readonly>
+                </div>
+
+                <!-- แถวที่ 5: ค่ามือ (อัตโนมัติ) & เวลาจอง -->
+                <div>
+                    <label for="commission" class="block text-gray-800 text-sm font-semibold mb-2">ค่ามือ:</label>
+                    <input type="text" id="commission" name="commission" class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300 cursor-not-allowed" readonly>
+                </div>
+                <div>
+                    <label for="bookingTime" class="block text-gray-800 text-sm font-semibold mb-2">เวลาจอง:</label>
+                    <input type="time" id="bookingTime" name="bookingTime" class="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2e5283]" required>
+                </div>
+
+                <!-- แถวที่ 6: Dropdown ห้องที่ใช้ & Dropdown สถานะ -->
+                <div>
+                    <label for="roomUsed" class="block text-gray-800 text-sm font-semibold mb-2">ห้องที่ใช้:</label>
+                    <select id="roomUsed" name="roomUsed" class="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2e5283]" required>
+                        <option value="">เลือกห้อง</option>
+                        <option value="Room 1">ห้อง 1</option>
+                        <option value="Room 2">ห้อง 2</option>
+                        <option value="Room 3">ห้อง 3</option>
+                        <option value="VIP Room">ห้อง VIP</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="status" class="block text-gray-800 text-sm font-semibold mb-2">สถานะ:</label>
+                    <select id="status" name="status" class="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2e5283]" required>
+                        <option value="">เลือกสถานะ</option>
+                        <option value="Confirmed">ยืนยันแล้ว</option>
+                        <option value="Pending">รอดำเนินการ</option>
+                        <option value="Cancelled">ยกเลิกแล้ว</option>
+                        <option value="Completed">เสร็จสิ้น</option>
+                    </select>
+                </div>
+
+                <!-- แถวที่ 7: รหัสพนักงานรับจอง & ชื่อพนักงานรับจอง (อัตโนมัติ) -->
+                <div>
+                    <label for="bookingEmpId" class="block text-gray-800 text-sm font-semibold mb-2">รหัสพนักงานรับจอง:</label>
+                    <input type="text" id="bookingEmpId" name="bookingEmpId" placeholder="กรอกรหัสพนักงาน" class="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2e5283]" required>
+                </div>
+                <div>
+                    <label for="bookingEmpName" class="block text-gray-800 text-sm font-semibold mb-2">ชื่อพนักงานรับจอง:</label>
+                    <input type="text" id="bookingEmpName" name="bookingEmpName" class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300 cursor-not-allowed" readonly>
+                </div>
+
+                <!-- แถวที่ 8: หมายเหตุ -->
+                <div class="md:col-span-2">
+                    <label for="notes" class="block text-gray-800 text-sm font-semibold mb-2">หมายเหตุ:</label>
+                    <textarea id="notes" name="notes" rows="3" placeholder="เพิ่มหมายเหตุ (ถ้ามี)" class="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2e5283]"></textarea>
+                </div>
+
+                <!-- ปุ่มบันทึกข้อมูล -->
+                <div class="md:col-span-2 flex justify-center">
+                    <button type="submit" class="bg-[#2e5283] hover:bg-blue-800 text-white font-bold py-3 px-8 rounded-full shadow-lg transition duration-300 ease-in-out transform hover:scale-105">
+                        บันทึกข้อมูลการจอง
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ส่วนค้นหาและแก้ไขการจอง -->
+    <div class="w-full max-w-4xl mt-8 rounded-xl shadow-lg overflow-hidden form-container p-6">
+        <div class="header-bg text-white p-4 rounded-t-xl">
+            <h2 class="text-2xl font-bold text-center">ค้นหาและแก้ไขการจอง</h2>
+        </div>
+        <div class="body-bg p-4 rounded-b-xl">
+            <div class="mb-4 flex flex-col md:flex-row items-end space-y-2 md:space-y-0 md:space-x-2">
+                <div class="flex-grow w-full">
+                    <label for="searchQuery" class="block text-gray-800 text-sm font-semibold mb-2">ค้นหาด้วยชื่อลูกค้า หรือ เบอร์ติดต่อ:</label>
+                    <input type="text" id="searchQuery" placeholder="กรอกชื่อลูกค้า หรือ เบอร์ติดต่อ" class="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2e5283]">
+                </div>
+                <button id="searchBookingsBtn" class="bg-[#2e5283] hover:bg-blue-800 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 w-full md:w-auto">
+                    ค้นหาการจอง
+                </button>
+                <button id="newBookingBtn" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 w-full md:w-auto">
+                    จองใหม่
+                </button>
+            </div>
+            <div id="searchResultsContainer" class="overflow-x-auto">
+                <table class="min-w-full bg-white rounded-lg shadow-md">
+                    <thead class="bg-gray-200">
+                        <tr>
+                            <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700">วันที่</th>
+                            <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700">เวลา</th>
+                            <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700">ลูกค้า</th>
+                            <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700">คอร์ส</th>
+                            <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700">สถานะ</th>
+                            <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700">ดำเนินการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="searchResultsTableBody">
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-gray-500">กรุณาค้นหาการจอง</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Course data provided by the user
+        const courseData = [
+            { code: "BF0011-1", name: "HYDRATING TREATMENT with Edulis", time: 75, price: 2500, commission: 75 },
+            { code: "BF0015-1", name: "ANTI-POLLUTION DETOX TREATMENT with Aphloia", time: 75, price: 3000, commission: 90 },
+            { code: "BF0017", name: "PETIT ANTI-AGEING GLOBAL TREATMENT with Botanical Bud Nectar", time: 30, price: 1500, commission: 45 },
+            { code: "BF0018-1", name: "ANTI-AGEING GLOBAL TREATMENTwithBotanicalBudNectar", time: 90, price: 3500, commission: 120 },
+            { code: "BF0026-1", name: "ANTI-AGEING GLOBAL LPG TREATMENT with Botanical Bud Nectar", time: 75, price: 3900, commission: 120 },
+            { code: "BF0027-1", name: "EXPERT LIFTING with Ajuga Reptans", time: 75, price: 3000, commission: 90 },
+            { code: "BF0028-1", name: "SOOTHING TREATMENT with Wild Camomille", time: 75, price: 3000, commission: 90 },
+            { code: "BF0030-1", name: "MATTIFYING TREATMENT with Boreal Tea powder", time: 75, price: 2500, commission: 75 },
+            { code: "BF0031-1", name: "BRIGTH BOTANICAL ILLUMINATING TREATMENT with IvoryTagua", time: 75, price: 3000, commission: 90 },
+            { code: "BF0032", name: "SIGNATURE RE-SCALPING TREATMENT with Organic Apple oil", time: 75, price: 3500, commission: 120 },
+            { code: "BF0033", name: "ANTI-AGE GLOBAL THE ULTIMATE TREATMENT WITH BOTANICAL BUD NECTAR", time: 90, price: 3500, commission: 120 },
+            { code: "BF0034", name: "ANTI-AGE GLOBAL THE ULTIMATE TREATMENT + LPG BOOSTER WITH BOTANICAL BUD NECTAR", time: 75, price: 3900, commission: 120 },
+            { code: "BF0035", name: "BIRIGHT & ILLUMINATE TREATMENT WITH IVORY TAGUA", time: 75, price: 3000, commission: 90 },
+            { code: "BF0036", name: "ANTI-POLLUTION DETOX TREATMENT with Aphloia", time: 75, price: 3000, commission: 90 },
+            { code: "BF0037", name: "ANTI-AGE GLOBAL FACE & NECK MASK TREATMENT WITH BOTANICAL BUD NECTAR", time: 30, price: 1200, commission: 40 },
+            { code: "BF0038", name: "ANTI-FATIGUE EYE MASK WITH ORGANIC CORNFLOWER", time: 15, price: 400, commission: 15 },
+            { code: "BF0039", name: "ANTI-FATIGUE EYE TREATMENT WITH ORGANIC CORNFLOWER", time: 30, price: 700, commission: 25 },
+            { code: "BF0040", name: "HYDRATING TREATMENT with Edulis", time: 75, price: 2500, commission: 75 },
+            { code: "BF0041", name: "SOOTHING TREATMENT with Wild Camomille", time: 75, price: 3000, commission: 90 },
+            { code: "BF0042", name: "MATTIFYING TREATMENT with Boreal Tea powder", time: 75, price: 2500, commission: 75 },
+            { code: "BF0043", name: "PETITE HYDRATING TREATMENT", time: 30, price: 1290, commission: 40 },
+            { code: "BF0044", name: "PETITE MATTIFYING TREATMENT", time: 30, price: 1290, commission: 40 },
+            { code: "BF0045", name: "PETITE ACNE CLEAR TREATMENT", time: 30, price: 1290, commission: 40 },
+            { code: "BF0046", name: "PETITE BIRIGHT & ILLUMINATE TREATMENT", time: 30, price: 1490, commission: 40 },
+            { code: "BF0047", name: "PETITE SIGNATURE RE-SCULPTING TREATMENT", time: 30, price: 1590, commission: 40 },
+            { code: "BH0002", name: "SCALP BALANCING & DETOXIFYING TREATMENT with Organic Algae (Pur Detox)", time: 90, price: 1800, commission: 80 },
+            { code: "BH0003", name: "HAIR REVITALISING & RESTORING TREATMENT with Botanical Expert (Color/Repair)", time: 90, price: 1800, commission: 80 },
+            { code: "BH0004", name: "PETITE HAIR NUETRALIZATION", time: 45, price: 990, commission: 50 },
+            { code: "BP0001", name: "FULL FACE & BODY RENEWAL PACKAGE", time: 180, price: 4900, commission: 250 },
+            { code: "BT0005-1", name: "GETAWAY TO LA GACILLY with Camomile flowers", time: 90, price: 2500, commission: 100 },
+            { code: "BT0006-1", name: "GETAWAY TO AFRICA with Shea Butter&Entada seeds", time: 90, price: 2500, commission: 100 },
+            { code: "BT0009", name: "OCEANIC DETOX & DRAIN TREATMENT with Marine Algae", time: 90, price: 2500, commission: 100 },
+            { code: "BT0010", name: "BODY SPEEDY BRIGHT TREATMENT with Spice", time: 30, price: 600, commission: 30 },
+            { code: "BT0011", name: "GETAWAY TO LA GACILLY with Camomile flowers", time: 90, price: 2500, commission: 100 },
+            { code: "BT0012", name: "AFRICAN ESCAPE NOURISH & REPAIR TREATMENT WITH SHEA BUTTER AND WARM ENTADA SEEDS", time: 90, price: 2500, commission: 100 },
+            { code: "BT0013", name: "NECK & SHOULDER RELIEF", time: 30, price: 490, commission: 40 },
+            { code: "BW0007", name: "HALF LEGS waxing", time: 20, price: 700, commission: 25 },
+            { code: "BW0008", name: "FULL LEGS waxing", time: 30, price: 1100, commission: 35 },
+            { code: "BW0009", name: "HALF ARMS waxing", time: 20, price: 700, commission: 25 },
+            { code: "BW0010", name: "FULL ARMS waxing", time: 20, price: 900, commission: 30 },
+            { code: "BW0011", name: "UNDERARMS waxing", time: 20, price: 700, commission: 25 },
+            { code: "BW0012", name: "BIKINI LINE waxing", time: 20, price: 700, commission: 30 },
+            { code: "LPG 001", name: "LPG Body Express Treatment 45 mins", time: 45, price: 2500, commission: 90 },
+            { code: "LPG 001-1", name: "Endermologie Android body (ช่วงลำตัวบน)", time: 45, price: 2500, commission: 90 },
+            { code: "LPG 001-2", name: "Endermologie Gynoid body (ช่วงลำตัวล่าง)", time: 45, price: 2500, commission: 90 },
+            { code: "LPG 001-3", name: "Endermologie Shorty (ช่วงกลางลำตัว)", time: 45, price: 2500, commission: 90 },
+            { code: "LPG 001-4", name: "Endermologie Total care (ช่วงลำตัวบน-ล่าง)", time: 45, price: 2500, commission: 90 },
+            { code: "LPG 001-5", name: "Endermologie Cellulite smoothing (เซลลูไลทผิวเปลือกส้ม)", time: 45, price: 2500, commission: 90 },
+            { code: "LPG 001-6", name: "Endermologie Aqueous Cellulite (เซลลูไลท์ผิวบวมน้ำ)", time: 45, price: 2500, commission: 90 },
+            { code: "LPG 001-7", name: "Endermologie Fluid Mobilization + Tight Slimming", time: 45, price: 2500, commission: 90 },
+            { code: "LPG 001-8", name: "Endermologie Skin Toning (กระชับผิว)", time: 45, price: 2500, commission: 90 },
+            { code: "LPG 002", name: "LPG Body Target Treatment 15 mins.", time: 15, price: 800, commission: 30 },
+            { code: "LPG 002-1", name: "Arm Slimming แขนท่อนบน", time: 15, price: 800, commission: 30 },
+            { code: "LPG 002-10", name: "Back Skin Toning (Firm) หลังส่วนบน", time: 18, price: 800, commission: 30 },
+            { code: "LPG 002-11", name: "Waist Slimming รอบเอว", time: 15, price: 800, commission: 30 },
+            { code: "LPG 002-12", name: "Buttocks Slimming บั้นท้าย", time: 15, price: 800, commission: 30 },
+            { code: "LPG 002-13", name: "Saddlebag Slimming ต้นขา", time: 15, price: 800, commission: 30 },
+            { code: "LPG 002-14", name: "Calves Slimming น่อง", time: 15, price: 800, commission: 30 },
+            { code: "LPG 002-2", name: "Arm Skin Toning (Firm) แขนท่อนบน", time: 15, price: 800, commission: 30 },
+            { code: "LPG 002-3", name: "Stomach Slimming หน้าท้อง", time: 15, price: 800, commission: 30 },
+            { code: "LPG 002-4", name: "Stomach Skin Toning (Firm) หน้าท้อง", time: 15, price: 800, commission: 30 },
+            { code: "LPG 002-5", name: "Tight Slimming ต้นขา", time: 15, price: 800, commission: 30 },
+            { code: "LPG 002-6", name: "Tight Skin Toning (Firm) ต้นขา", time: 15, price: 800, commission: 30 },
+            { code: "LPG 002-7", name: "Tight Cellulite ต้นขา", time: 15, price: 800, commission: 30 },
+            { code: "LPG 002-8", name: "Knees หัวเข่า", time: 15, price: 800, commission: 30 },
+            { code: "LPG 002-9", name: "Back Slimming หลังส่วนบน", time: 15, price: 800, commission: 30 },
+            { code: "LPG 101", name: "LPG Facial Express Treatment 45 mins", time: 45, price: 2500, commission: 90 },
+            { code: "LPG 101-1", name: "Endermologie Fluid Mobilization ลดอาการบวมน้ำ ล้างสารพิษ", time: 45, price: 2500, commission: 90 },
+            { code: "LPG 101-2", name: "Endermologie Glow หน้าใส", time: 45, price: 2500, commission: 90 },
+            { code: "LPG 101-3", name: "Endermologie Total Eye ลดถุงใต้ตา ริ้วรอยรอบดวงตา", time: 45, price: 2500, commission: 90 },
+            { code: "LPG 101-4", name: "Endermologie Eyes & Lips ลด ริ้วรอยรอบดวงตา ริมฝีปากอิ่ม", time: 45, price: 2500, commission: 90 },
+            { code: "LPG 101-5", name: "Endermologie Age-defying Relump ลดริ้วรอย เติมเต็ม สำหรับคนหน้าตอบ", time: 45, price: 2500, commission: 90 },
+            { code: "LPG 101-6", name: "Endermologie Age-defying Skin Tone กระชับผิว สำหรับผิวหย่อยคล้อย ขาดความกระชับ", time: 45, price: 2500, commission: 90 },
+            { code: "LPG 101-7", name: "Endermologie Age-defying Rescrulpt ลดไขมัน ปรับรูปหน้า ลดคาง 2 ชั้น", time: 45, price: 2500, commission: 90 },
+            { code: "LPG 101-8", name: "Endermologie Cellular Stimulation กระตั้นการสร้างเซลล์ ฟื้นฟูการทำงานเซลล์ผิว", time: 45, price: 2500, commission: 90 },
+            { code: "LPG 102", name: "LPG Facial Target Treatment 10 mins.", time: 10, price: 600, commission: 30 },
+            { code: "LPG 102-1", name: "Forhead หน้าผาก", time: 10, price: 600, commission: 30 },
+            { code: "LPG 102-2", name: "Eye Wrinkle ลดริ้วรอย รอยตีนกา", time: 10, price: 600, commission: 30 },
+            { code: "LPG 102-3", name: "Eye circles & Puffs ลดถุงบวมใต้ตา รอยหมองคล้ำ", time: 10, price: 600, commission: 30 },
+            { code: "LPG 102-4", name: "Jaw line ยกกระชับบริเวณกราม", time: 10, price: 600, commission: 30 },
+            { code: "LPG 102-5", name: "Mouth Area ลดริ้วรอย เพิ่มความเอิบอิ่มให้ริมฝีปาก", time: 10, price: 600, commission: 30 },
+            { code: "LPG 102-6", name: "Double chin ลดคาง 2 ชั้น", time: 10, price: 600, commission: 30 },
+            { code: "LPG 102-7", name: "Neck ลดริ้วรอยบริเวณคอ", time: 12, price: 600, commission: 30 },
+            { code: "LPG003-1", name: "LPG Body Firming & Anti-Cellulite Treatment", time: 60, price: 3000, commission: 120 }
+        ];
+
+        // Employee data provided by the user
+        const employeeData = [
+            { branch: "Y0008-Central Plaza Pinklao", id: "303571", name: "สรัลชนา หาญห้าว", nickname: "พลอย" },
+            { branch: "Y0024-The Mall Korat", id: "303836", name: "ณิชชาพัณณ์ วิสิฐธรานนท์", nickname: "แป้ง" },
+            { branch: "Y0004-Central Plaza Rama 3", id: "303005", name: "อรวรรณ ชัยชูเชิด", nickname: "แอม" },
+            { branch: "Y0007-The Mall Bangkapi", id: "303727", name: "ชญากานต์ เจียมศรีชัย", nickname: "มาย" },
+            { branch: "Y0094 - Megabangna SPA", id: "303819", name: "ลักษิณาวรีย์ ตรีศักดิ์", nickname: "ปิ่น" },
+            { branch: "Y0001-Siam Center MF.", id: "301180", name: "สุวรัชต์ แดงไพบูลย์", nickname: "ขวัญ" },
+            { branch: "Y0001-Siam Center MF.", id: "303655", name: "จิรนันท์ กั้วพิจิตร", nickname: "เวย์" },
+            { branch: "Y0003-Central Plaza Bangna", id: "300376", name: "ปนัดดา สารพัฒน์", nickname: "ตุ๊กตา" },
+            { branch: "Y0003-Central Plaza Bangna", id: "302864", name: "จิตราภรณ์ ยศสมบัติ", nickname: "หน่อย" },
+            { branch: "Y0003-Central Plaza Bangna", id: "303584", name: "พรนภา กาสิงห์", nickname: "นุ่น" },
+            { branch: "Y0003-Central Plaza Bangna", id: "303601", name: "อมรศรี ทิพย์พลชัย", nickname: "กิ๊ฟ" },
+            { branch: "Y0003-Central Plaza Bangna", id: "303541", name: "สาวิตรี พัดศรี", nickname: "สา" },
+            { branch: "Y0004-Central Plaza Rama 3", id: "300553", name: "ทัตพร สัมฤทธิ์", nickname: "สาว" },
+            { branch: "Y0004-Central Plaza Rama 3", id: "301039", name: "ปรารถนา สุติ", nickname: "ปู" },
+            { branch: "Y0004-Central Plaza Rama 3", id: "302187", name: "ชนัญชิดา มณีโคตร", nickname: "แพน" },
+            { branch: "Y0004-Central Plaza Rama 3", id: "303565", name: "กัณธิมา สมจิต", nickname: "โย" },
+            { branch: "Y0005-Central Festival Pattaya Beach", id: "300770", name: "อัมพาวรรณ ธีระกิจมานันทชัย", nickname: "ตูน" },
+            { branch: "Y0005-Central Festival Pattaya Beach", id: "303064", name: "วงเดือน เกษอินทร์", nickname: "เดือน" },
+            { branch: "Y0005-Central Festival Pattaya Beach", id: "303608", name: "นิธิริสา ทุมวงศ์", nickname: "มลลี่" },
+            { branch: "Y0006-Central Plaza Lardprao", id: "301853", name: "พิชชานันท์ ทองโพธิ์", nickname: "ขวัญ" },
+            { branch: "Y0006-Central Plaza Lardprao", id: "302007", name: "นิตยา เพ็งเภา", nickname: "แพม" },
+            { branch: "Y0006-Central Plaza Lardprao", id: "302965", name: "สุจินดา แสนธิ", nickname: "น้ำ" },
+            { branch: "Y0006-Central Plaza Lardprao", id: "303596", name: "นฤพร วังทะพันธ์", nickname: "น้ำฟ้า" },
+            { branch: "Y0006-Central Plaza Lardprao", id: "303718", name: "ทิพาพร ธีระวงศ์", nickname: "แป้ง" },
+            { branch: "Y0006-Central Plaza Lardprao", id: "302043", name: "โยษิตา หอมฉุน", nickname: "โย" },
+            { branch: "Y0006-Central Plaza Lardprao", id: "303801", name: "ชมัญชญา สว่างเมฆ", nickname: "ซี" },
+            { branch: "Y0007-The Mall Bangkapi", id: "300134", name: "อรทัย ชื่นเจริญ", nickname: "เก๋" },
+            { branch: "Y0007-The Mall Bangkapi", id: "300183", name: "จินดา ยศมา", nickname: "เอ๋" },
+            { branch: "Y0007-The Mall Bangkapi", id: "302246", name: "ณัฐรินีย์ ศรีงามผ่อง", nickname: "แตน" },
+            { branch: "Y0007-The Mall Bangkapi", id: "303636", name: "เมลิษา เรืองเดชา", nickname: "ซิม" },
+            { branch: "Y0008-Central Plaza Pinklao", id: "302064", name: "สุจีรา สุขสุวรรณ", nickname: "แป้ง" },
+            { branch: "Y0008-Central Plaza Pinklao", id: "302611", name: "อาภาพร คำภูนอก", nickname: "ส้ม" },
+            { branch: "Y0008-Central Plaza Pinklao", id: "302793", name: "ศตมล ธนะหิรัญญา", nickname: "อ้อน" },
+            { branch: "Y0008-Central Plaza Pinklao", id: "303567", name: "ชาลิสา กสิรักษ์", nickname: "สา" },
+            { branch: "Y0009-Seacon Square", id: "300343", name: "มัณยภา หมายเจริญ", nickname: "ยู" },
+            { branch: "Y0009-Seacon Square", id: "301200", name: "เบญจมาศ พ้นภัย", nickname: "เบญ" },
+            { branch: "Y0009-Seacon Square", id: "303391", name: "สุกัญญา เงินทอง", nickname: "พลอย" },
+            { branch: "Y0009-Seacon Square", id: "303784", name: "เมวียา สมหวังดี", nickname: "เมย์" },
+            { branch: "Y0010-Future Park Rangsit", id: "300118", name: "สุชาดา สุขไพบูลย์", nickname: "หลิว" },
+            { branch: "Y0010-Future Park Rangsit", id: "300405", name: "จารุวรรณ กุลไชยกุล", nickname: "แอน" },
+            { branch: "Y0010-Future Park Rangsit", id: "301876", name: "สุพิชฌาย์ เวชราภรณ์", nickname: "แอน" },
+            { branch: "Y0047-Center One Plaza", id: "303519", name: "วุฒิชัย โบบทอง", nickname: "ซันนี่" },
+            { branch: "Y0010-Future Park Rangsit", id: "303651", name: "ก่องกาญจน์ ทองแป้น", nickname: "นาง" },
+            { branch: "Y0010-Future Park Rangsit", id: "303731", name: "วิภาดา สว่างวงศ์", nickname: "แพท" },
+            { branch: "Y0012-The Mall Tapra", id: "301811", name: "สุดาทิพย์ ทิพย์แก้ว", nickname: "โอ๋" },
+            { branch: "Y0012-The Mall Tapra", id: "303184", name: "อารียา งามแสง", nickname: "มายด์" },
+            { branch: "Y0012-The Mall Tapra", id: "303772", name: "กฤษตรา วราวีระโชติ", nickname: "พิมมา" },
+            { branch: "Y0013-Silom Complex", id: "300251", name: "พัชรี แซ่บู๊", nickname: "เจี๊ยบ" },
+            { branch: "Y0013-Silom Complex", id: "301723", name: "ทัดดาว อินทร์จันทร์", nickname: "ดาว" },
+            { branch: "Y0013-Silom Complex", id: "302373", name: "สุนิสา คำปิ๋ว", nickname: "เหมียว" },
+            { branch: "Y0013-Silom Complex", id: "303561", name: "ปิยดา ชูเนตร", nickname: "โบว์" },
+            { branch: "Y0013-Silom Complex", id: "303609", name: "หนึ่งฤทัย วงค์เสนา", nickname: "ใจ" },
+            { branch: "Y0014-The Mall Bangkae", id: "300811", name: "เยาวภา พลยุทธภูมิ", nickname: "น้ำฝน" },
+            { branch: "Y0014-The Mall Bangkae", id: "302536", name: "พัชรินทร์ พันธ์ขาว", nickname: "นุ่มนิ่ม" },
+            { branch: "Y0014-The Mall Bangkae", id: "302540", name: "สิริลักษณ์ ขลิบตรีแก้ว", nickname: "น้องตาล" },
+            { branch: "Y0014-The Mall Bangkae", id: "302937", name: "ปนิตา แทนประชา", nickname: "แอน" },
+            { branch: "Y0014-The Mall Bangkae", id: "303834", name: "จิณณพัต ขำกุศล", nickname: "นิ้ง" },
+            { branch: "Y0015-Central Plaza Rama 2", id: "303607", name: "นิตยา พลศรี", nickname: "แต" },
+            { branch: "Y0015-Central Plaza Rama 2", id: "300353", name: "พัชราภรณ์ โหวดมงคล", nickname: "แพร" },
+            { branch: "Y0015-Central Plaza Rama 2", id: "301686", name: "จารุวรรณ มังคละ", nickname: "ฝน" },
+            { branch: "Y0015-Central Plaza Rama 2", id: "301780", name: "จินตนา แตงพันธ์", nickname: "มุก" },
+            { branch: "Y0015-Central Plaza Rama 2", id: "303402", name: "อรอุมา แสงชาติ", nickname: "ใหม่" },
+            { branch: "Y0015-Central Plaza Rama 2", id: "303579", name: "ภัทรพรรณ นระเลิศ", nickname: "โปเต้" },
+            { branch: "Y0016-The Mall Ngamwongwan", id: "300374", name: "เบญจมาศ นันทกุล", nickname: "นก" },
+            { branch: "Y0016-The Mall Ngamwongwan", id: "302740", name: "นรีรัตน์ ผาลือคำ", nickname: "จุ๊บจิ๊บ" },
+            { branch: "Y0016-The Mall Ngamwongwan", id: "303552", name: "กรทิพย์ เหนือทอง", nickname: "จอย" },
+            { branch: "Y0016-The Mall Ngamwongwan", id: "303554", name: "เพ็ญพักตร์ ศรีชัยศักดิ์", nickname: "ฝน" },
+            { branch: "Y0016-The Mall Ngamwongwan", id: "303697", name: "สุดารัตน์ ไหลอุดี", nickname: "แบ๋ม" },
+            { branch: "Y0016-The Mall Ngamwongwan", id: "303831", name: "สุจิตรา คู่กระสังข์", nickname: "ตุ๊กตา" },
+            { branch: "Y0017-CentralPlaza Chaingmai Airport", id: "301768", name: "ศิราณี แก้วแกมคำ", nickname: "เก๋" },
+            { branch: "Y0017-CentralPlaza Chaingmai Airport", id: "303748", name: "อังคณา คำศรี", nickname: "อัง" },
+            { branch: "Y0018-Fashion Island", id: "302967", name: "บุษกร แพงรูป", nickname: "หยก" },
+            { branch: "Y0018-Fashion Island", id: "300609", name: "พัณณ์ชิตา ทองมุข", nickname: "ใจ" },
+            { branch: "Y0018-Fashion Island", id: "301293", name: "วาสนา ชมภูโกฐ", nickname: "นุช" },
+            { branch: "Y0018-Fashion Island", id: "303379", name: "สกุลรัตน์ แก้ววัน", nickname: "น้ำ" },
+            { branch: "Y0018-Fashion Island", id: "303398", name: "ขนิษฐา บุญสนธิ์", nickname: "ขวัญ" },
+            { branch: "Y0018-Fashion Island", id: "303611", name: "ภัณฑิรา ก๋งชิน", nickname: "เปา" },
+            { branch: "Y0018-Fashion Island", id: "303684", name: "นุสรา ทองใส", nickname: "ตั๊ก" },
+            { branch: "Y0018-Fashion Island", id: "303743", name: "มณีรัตน์ เจียรศิลานุวัตร", nickname: "จู" },
+            { branch: "Y0019-Tesco Lotus Sukhumvit 50", id: "300130", name: "ณัฎฐ์ณิชชา สัมฤทธิ์ณิชกุล", nickname: "ปุ๊ก" },
+            { branch: "Y0019-Tesco Lotus Sukhumvit 50", id: "303563", name: "กันยรัตน์ ฤาชา", nickname: "บุ๋มบิ๋ม" },
+            { branch: "Y0021-Central Festival Phuket", id: "300410", name: "วรรณวนัช ศรีทอง", nickname: "โอ๋" },
+            { branch: "Y0021-Central Festival Phuket", id: "301942", name: "รุ่งอรุณ เรียบร้อย", nickname: "บุ๋ม" },
+            { branch: "Y0021-Central Festival Phuket", id: "303800", name: "สุทธิลักษณ์ ภู่พรประเสริฐ", nickname: "สวย" },
+            { branch: "Y0024-The Mall Korat", id: "303615", name: "นิตยา จันแตง", nickname: "ทราย" },
+            { branch: "Y0024-The Mall Korat", id: "301540", name: "กรรณิกา กันนิล", nickname: "ป็อก" },
+            { branch: "Y0025-Central Plaza Chaengwattana", id: "300255", name: "มณทิชา สินสวัสดิ์", nickname: "แอน" },
+            { branch: "Y0025-Central Plaza Chaengwattana", id: "303103", name: "รัตนาวดี ใจฉ่ำ", nickname: "น้ำหวาน" },
+            { branch: "Y0025-Central Plaza Chaengwattana", id: "303830", name: "เรวดี รัตนรัตน์", nickname: "สาว" },
+            { branch: "Y0026-Central Plaza Khonkaen", id: "301605", name: "นงนุช วรยศ", nickname: "นุช" },
+            { branch: "Y0026-Central Plaza Khonkaen", id: "302757", name: "ปรารวี ปราณีวงศ์", nickname: "ฟ้า" },
+            { branch: "Y0026-Central Plaza Khonkaen", id: "302934", name: "วรัตยา ราชาวงษ์", nickname: "อิ๋วอิ๋ว" },
+            { branch: "Y0027-Paradise Park", id: "301986", name: "อัฬฬิการัตน์ รอดทุกข์", nickname: "แอ้ม" },
+            { branch: "Y0027-Paradise Park", id: "303542", name: "จิราทิพย์ คำพรมมี", nickname: "จ๋า" },
+            { branch: "Y0027-Paradise Park", id: "303616", name: "กมลรัตน์ แก้วสมเด็จ", nickname: "เค้ก" },
+            { branch: "Y0027-Paradise Park", id: "303764", name: "ธันยพร แดงเนียม", nickname: "นาเดีย" },
+            { branch: "Y0028-Central Plaza Chiangrai", id: "300479", name: "เนตรนภา บุญมั่น", nickname: "จ๋า" },
+            { branch: "Y0028-Central Plaza Chiangrai", id: "303556", name: "ปนัดดา ไวทยาคม", nickname: "นัท" },
+            { branch: "Y0031-Central Plaza Phitsanuloke", id: "303632", name: "นัชนิชา ศรีทัศทนาม", nickname: "อาย" },
+            { branch: "Y0031-Central Plaza Phitsanuloke", id: "301786", name: "ณัฐธยาน์ อุ่นมาก", nickname: "น้อย" },
+            { branch: "Y0031-Central Plaza Phitsanuloke", id: "303823", name: "ฐิติวรดา สุขรักษา", nickname: "แทน" },
+            { branch: "Y0032-Central Plaza Grand Rama 9", id: "300953", name: "พัชรา แซ่บู๊", nickname: "ผึ้ง" },
+            { branch: "Y0032-Central Plaza Grand Rama 9", id: "302317", name: "ณัฐพัชร์ เปาะทอง", nickname: "ปาล์ม" },
+            { branch: "Y0032-Central Plaza Grand Rama 9", id: "303078", name: "กุลลินี สวัสดิ์ชัย", nickname: "แบม" },
+            { branch: "Y0032-Central Plaza Grand Rama 9", id: "303397", name: "ชนัญชิดา สำราญจิตร์", nickname: "เตย" },
+            { branch: "Y0032-Central Plaza Grand Rama 9", id: "303656", name: "จิตตมาส แซ่ว่าง", nickname: "เย้า" },
+            { branch: "Y0032-Central Plaza Grand Rama 9", id: "303668", name: "อานันดา กลิ่นหอมชื่น", nickname: "นุ่น" },
+            { branch: "Y0033-Century Movie Plaza", id: "302390", name: "นริศรา นิมา", nickname: "วา" },
+            { branch: "Y0034-Central Plaza Udonthani", id: "300312", name: "ภคมน พ่อศรีซา", nickname: "ปุ๋ย" },
+            { branch: "Y0034-Central Plaza Udonthani", id: "302649", name: "เจียมกมล นพวงค์", nickname: "เมย์" },
+            { branch: "Y0034-Central Plaza Udonthani", id: "303827", name: "สุุณิสา หม่อยหลง", nickname: "กิ๊ก" },
+            { branch: "Y0035-Mega Bangna", id: "303543", name: "วณิชวัลย์ จินาวัลย์", nickname: "แอน" },
+            { branch: "Y0035-Mega Bangna", id: "303592", name: "อรธิดา ปานะเจริญ", nickname: "ฝ้าย" },
+            { branch: "Y0035-Mega Bangna", id: "303818", name: "นวพล รักเสมอวงค์", nickname: "แนน" },
+            { branch: "Y0036-Seacon Bangkae", id: "303577", name: "สุกัญญา นุกิจ", nickname: "แอม" },
+            { branch: "Y0036-Seacon Bangkae", id: "300424", name: "รสริน จันทร์เพ็ง", nickname: "จิ" },
+            { branch: "Y0036-Seacon Bangkae", id: "303817", name: "ธัญชนก วงศ์แหวน", nickname: "นุ่น" },
+            { branch: "Y0037-Central Plaza Suratthani", id: "303568", name: "จินตหรา เกตุพงษ์พันธุ์", nickname: "อ้อม" },
+            { branch: "Y0037-Central Plaza Suratthani", id: "303595", name: "ภัทริกา ถาวรรัตน์", nickname: "อีฟ" },
+            { branch: "Y0037-Central Plaza Suratthani", id: "303642", name: "ภิญรัตน์ นาคพล", nickname: "อิ๋ว" },
+            { branch: "Y0039-Central Plaza Ubonratchathani", id: "300923", name: "สุภาพร ไพเราะ", nickname: "กิ๊บเก๋" },
+            { branch: "Y0039-Central Plaza Ubonratchathani", id: "301378", name: "วิลัยพรรณ ทะวิชัย", nickname: "โบว์" },
+            { branch: "Y0039-Central Plaza Ubonratchathani", id: "301718", name: "พรรวินท์ วรรณเดช", nickname: "เจี๊ยบ" },
+            { branch: "Y0039-Central Plaza Ubonratchathani", id: "303553", name: "สิรินารถ จูมจันทร์", nickname: "จูน" },
+            { branch: "Y0040-Tesco Lotus Srinakarin", id: "301634", name: "ณัฐธนารวี จิรภาณัฐกิจโชค", nickname: "นิล" },
+            { branch: "Y0040-Tesco Lotus Srinakarin", id: "303580", name: "ธนวันต์ โคตรโย", nickname: "บี" },
+            { branch: "Y0041-Central Festival Chiangmai", id: "300529", name: "วรรณชณิฎา อักษรเดช", nickname: "แพง" },
+            { branch: "Y0041-Central Festival Chiangmai", id: "303566", name: "จรินทร์ทิพย์ อรุณพิภัทร", nickname: "ริน" },
+            { branch: "Y0041-Central Festival Chiangmai", id: "303708", name: "ธันย์ชนก ตันกุณะ", nickname: "เนิร์ด" },
+            { branch: "Y0042-Central Festival Hatyai", id: "301607", name: "จิราพร มหันตมรรค", nickname: "ตั๊ก" },
+            { branch: "Y0042-Central Festival Hatyai", id: "303749", name: "ขวัญนภา อินทรัตน์", nickname: "ขวัญ" },
+            { branch: "Y0044-Market Village Huahin", id: "303768", name: "ณัฐชา ไทยงาม", nickname: "หมวย" },
+            { branch: "Y0044-Market Village Huahin", id: "303783", name: "ปวริศา ทับแสงศรี", nickname: "นก" },
+            { branch: "Y0046-Central Festival Samui", id: "303559", name: "อฐิสา คงแก้ว", nickname: "ชมพู่" },
+            { branch: "Y0046-Central Festival Samui", id: "303710", name: "ช่อผกา เจะเว", nickname: "มีณา" },
+            { branch: "Y0081- Big C Sapankwai", id: "303723", name: "ชนัญชิดา สุขสบาย", nickname: "จิ๊ก" },
+            { branch: "Y0048-Central Plaza Salaya", id: "303562", name: "ณัฐญญา ชมปั้นทอง", nickname: "ติ๊ก" },
+            { branch: "Y0048-Central Plaza Salaya", id: "303682", name: "ศุฑาลักษณ์ สันหพงศ์", nickname: "สตางค์" },
+            { branch: "Y0048-Central Plaza Salaya", id: "301024", name: "สุภาพร แสนทวี", nickname: "บิ๋ม" },
+            { branch: "Y0049-Tesco Lotus Bangyai", id: "301989", name: "ธนัชพร มาเจริญ", nickname: "เจี๊ยบ" },
+            { branch: "Y0049-Tesco Lotus Bangyai", id: "303588", name: "อริยะกัลย์ จันทริกานนท์", nickname: "จุน" },
+            { branch: "Y0049-Tesco Lotus Bangyai", id: "303698", name: "วรรณิสา สุกหอม", nickname: "อร" },
+            { branch: "Y0050-Sermthai Complex Mahasarakram", id: "301844", name: "จารุวรรณ ทองเอนก", nickname: "จา" },
+            { branch: "Y0050-Sermthai Complex Mahasarakram", id: "301845", name: "ณฤทัย อ่อนปัดชา", nickname: "กระแต" },
+            { branch: "Y0051-Central Plaza Rayong", id: "301988", name: "ละอองดาว แสนณรงค์", nickname: "ละอองดาว" },
+            { branch: "Y0051-Central Plaza Rayong", id: "303110", name: "นาถยา มาตราช", nickname: "บีบี" },
+            { branch: "Y0051-Central Plaza Rayong", id: "303703", name: "กานติมา พู่เจริญ", nickname: "ฟาง" },
+            { branch: "Y0052-Market Village Suvarnabhumi", id: "500003", name: "รัตนวรรณ ห้วยหงษ์ทอง", nickname: "จุ๊กกี๋" },
+            { branch: "Y0052-Market Village Suvarnabhumi", id: "303624", name: "แคทรียา จินดารัตนโกศล", nickname: "แคท" },
+            { branch: "Y0055-Central Plaza Westgate", id: "300989", name: "หนึ่งฤทัย ปานะสุทธะ", nickname: "หนึ่ง" },
+            { branch: "Y0055-Central Plaza Westgate", id: "302991", name: "ชนัญญา ศรีสำราญ", nickname: "ทราย" },
+            { branch: "Y0055-Central Plaza Westgate", id: "303685", name: "ณัฏฐ์หัทยา เขียวชอุ่ม", nickname: "วันใหม่" },
+            { branch: "Y0058-Central Plaza Chonburi", id: "302291", name: "ศิริมาลย์ พึ่งประสพ", nickname: "ไก่" },
+            { branch: "Y0058-Central Plaza Chonburi", id: "302880", name: "กานต์ชนิดา อุ่นมาก", nickname: "ตุ่น" },
+            { branch: "Y0058-Central Plaza Chonburi", id: "303570", name: "อรอุมา สมภักดี", nickname: "บี" },
+            { branch: "Y0058-Central Plaza Chonburi", id: "303794", name: "กาญจนา เชาว์แล่น", nickname: "มิ้น" },
+            { branch: "Y0059-CentralPlaza NakhonSiThammarat", id: "303320", name: "จิราภรณ์ พวงสร้อย", nickname: "โบว์" },
+            { branch: "Y0059-CentralPlaza NakhonSiThammarat", id: "303555", name: "สุกัญญา แสนคม", nickname: "อัล" },
+            { branch: "Y0062-Tesco Lotus Pakchong", id: "301747", name: "รัชฎาพร พรมจักร", nickname: "น้ำ" },
+            { branch: "Y0062-Tesco Lotus Pakchong", id: "303583", name: "สิริพร สุดโต", nickname: "พร" },
+            { branch: "Y0063-Central Plaza Nakhonratchasima", id: "302284", name: "นิตยา สว่างศรี", nickname: "นิต" },
+            { branch: "Y0063-Central Plaza Nakhonratchasima", id: "303600", name: "ดิษยา หิ้งทอง", nickname: "ต้อม" },
+            { branch: "Y0063-Central Plaza Nakhonratchasima", id: "303602", name: "กรหทัย บัวนุภาพ", nickname: "คิตตี้" },
+            { branch: "Y0065-Central Plaza Mahachai", id: "301206", name: "ณฐพร สุริวงศ์", nickname: "ผึ้ง" },
+            { branch: "Y0065-Central Plaza Mahachai", id: "301650", name: "วริศรา ม่วงเจริญ", nickname: "พอง" },
+            { branch: "Y0067-Central World", id: "301451", name: "อาภัสรา มะลิทอง", nickname: "เก๋" },
+            { branch: "Y0067-Central World", id: "303517", name: "สรัญญา บุตรโยจันโท", nickname: "เจนนี่" },
+            { branch: "Y0067-Central World", id: "303598", name: "พิมพ์พา กิจสว่างวงค์", nickname: "พิมพ์" },
+            { branch: "Y0067-Central World", id: "303677", name: "จิดาภา งามเสงี่ยม", nickname: "ปิงปอง" },
+            { branch: "Y0067-Central World", id: "303829", name: "ปาณิสรา จิระมงคลสุข", nickname: "หญิง" },
+            { branch: "Y0069-Central Festival Eastville", id: "300165", name: "จริยา พรหมแก้ว", nickname: "เจี้ยบ" },
+            { branch: "Y0069-Central Festival Eastville", id: "301373", name: "สำรวย ได้การ", nickname: "พลอย" },
+            { branch: "Y0069-Central Festival Eastville", id: "303581", name: "รวินันท์ แซ่เจ๋า", nickname: "หลิว" },
+            { branch: "Y0070-Terminal 21 Pattaya", id: "303564", name: "อภิญญา ทองใบ", nickname: "แป้ง" },
+            { branch: "Y0070-Terminal 21 Pattaya", id: "303589", name: "อัจจิมา ภูพันนา", nickname: "บี" },
+            { branch: "Y0077-101 The Third Place", id: "302341", name: "สุรัตน์ สืบสอาด", nickname: "จัย" },
+            { branch: "Y0077-101 The Third Place", id: "300678", name: "ธัญญาเรศ ห้วยหงษ์ทอง", nickname: "เรศ" },
+            { branch: "Y0077-101 The Third Place", id: "303603", name: "ศิริวรรณ นนทวงศ์", nickname: "ฝน" },
+            { branch: "Y0077-101 The Third Place", id: "303825", name: "อรจิตรา ชรินทร์", nickname: "จี๊ด" },
+            { branch: "Y0080-Gateway Bangsue", id: "302313", name: "ปานตะวัน ตาซื่อ", nickname: "ป่าน" },
+            { branch: "Y0080-Gateway Bangsue", id: "303654", name: "นิภาพร ชมสมบัติ", nickname: "แอม" },
+            { branch: "Y0080-Gateway Bangsue", id: "303787", name: "นันทิญา ศรีโนทัย", nickname: "นก" },
+            { branch: "Y0010 - Future Rangsit", id: "302470", name: "ศุภวดี เมรัตน์", nickname: "ปลาย" },
+            { branch: "Y0082-Central Plaza Lampang", id: "302319", name: "อุมาพร คำวงค์", nickname: "นุ้ย" },
+            { branch: "Y0082-Central Plaza Lampang", id: "303079", name: "นภาพร แปงปวนจู", nickname: "พร" },
+            { branch: "Y0087-Central Ayutthaya", id: "300820", name: "ฤทัยวรรณ บุญเลี้ยง", nickname: "ปุ๊ก" },
+            { branch: "Y0087-Central Ayutthaya", id: "301542", name: "จิรารัตน์ ฉ่ำตระกูล", nickname: "อีฟ" },
+            { branch: "Y0087-Central Ayutthaya", id: "301543", name: "อโนชา ทองพิศาล", nickname: "ไหม" },
+            { branch: "Y0087-Central Ayutthaya", id: "303693", name: "รติกร ฮุยพิมาย", nickname: "ใบเฟิร์น" },
+            { branch: "Y0088-MBK(KIOSK)", id: "302314", name: "ฐลิตา แจ่มแจ้ง", nickname: "น้ำ" },
+            { branch: "Y0089-Maya Lifestyle Shopping Center", id: "302420", name: "มาลินี จองป้อ", nickname: "เจน" },
+            { branch: "Y0089-Maya Lifestyle Shopping Center", id: "303753", name: "จรรยพร เทียมตา", nickname: "กาย" },
+            { branch: "Y0090-Central Nakhonsawan", id: "301678", name: "วรวัชราภรณ์ ลาญวิชัย", nickname: "ติ๊ก" },
+            { branch: "Y0090-Central Nakhonsawan", id: "303790", name: "พรนภา ฉัตรารักษ์", nickname: "ลูกเกด" },
+            { branch: "Y0091-Central Nakhon Pathom", id: "302654", name: "พุทธิดา คำสืบ", nickname: "บุ๋ม" },
+            { branch: "Y0091-Central Nakhon Pathom", id: "303308", name: "วรรณวิภา สุขผ่อง", nickname: "เฟิน" },
+            { branch: "Y0091 - Central Nakhonpathom", id: "303840", name: "อรณิชา สงวนสินธ์", nickname: "พลอย" },
+            { branch: "Y0092 - Central World SPA", id: "301181", name: "จิตราพร คำภา", nickname: "จิ๋ว" },
+            { branch: "Y0092 - Central World SPA", id: "303572", name: "ธนาภรณ์ พลีดี", nickname: "น้ำอิง" },
+            { branch: "Y0092 - Central World SPA", id: "302993", name: "ปรียาภรณ์ นันทการ", nickname: "รุ้ง" },
+            { branch: "Y0092 - Central World SPA", id: "303822", name: "อัญ สาเสาร์", nickname: "ชมพู่" },
+            { branch: "Y0093 - Center Point", id: "300935", name: "ปิยภัทร กฤตอัครศรี", nickname: "เจ" },
+            { branch: "Y0093 - Center Point", id: "303773", name: "วณาพร วิจิตรศักดิ์", nickname: "บิว" },
+            { branch: "Y0093 - Center Point", id: "303781", name: "พิมญชุ์รสา เพิ่มเจริญนุกูล", nickname: "เอิร์น" },
+            { branch: "Y0094 - Megabangna SPA", id: "301106", name: "ธิดารัตน์ เป็กทอง", nickname: "แคท" },
+            { branch: "Y0094 - Megabangna SPA", id: "302254", name: "ธมลวรรณ แซ่ลิ้ม", nickname: "ครีม" },
+            { branch: "Y0094 - Megabangna SPA", id: "303597", name: "สุภาพร ศูนย์ขิง", nickname: "ตอง" },
+            { branch: "Y0094 - Megabangna SPA", id: "303814", name: "พรณิชา ราศิวงค์", nickname: "ต้อย" },
+            { branch: "YB004-Central Westville", id: "300149", name: "สุภิญญา คุ้มรักษา", nickname: "โอ๊ะ" },
+            { branch: "YB004-Central Westville", id: "303692", name: "พัชรี เมฆวัน", nickname: "นิล" },
+            { branch: "ENB03-Eve&Boy Zpell", id: "303701", name: "เบญจพร เมาตากน้อย", nickname: "ไผ่" },
+            { branch: "YB999-Floater", id: "301617", name: "กานต์จิรา ส่งสมบูรณ์", nickname: "ไก่" },
+            { branch: "YB999-Floater", id: "303557", name: "สุชาดา ศิริวัฒโกมุติ", nickname: "เมย์" },
+            { branch: "YB999-Floater", id: "303558", name: "น้ำฝน วงษ์ใจ", nickname: "มิ้นท์" },
+            { branch: "YB999-Floater", id: "303560", name: "ภัคจิรา จันทร์เติบ", nickname: "เตย" },
+            { branch: "YB999-Floater", id: "303569", name: "สุรีรัตน์ สุดสวาท", nickname: "สนุ๊ก" },
+            { branch: "YB999-Floater", id: "303755", name: "สาวิตรี สายมะโน", nickname: "แอม" },
+            { branch: "YB999-Floater", id: "303824", name: "พิมพ์มาดา จารุวิมลรัตน์", nickname: "จ๋า" },
+            { branch: "Y0042-Central Festival Hatyai", id: "303841", name: "สุทธิดา เดเระมะ", nickname: "ซัน" },
+            { branch: "Y0028-Central Plaza Chiangrai", id: "303842", name: "รัชดาพร ร้องหมอดี", nickname: "น้ำหวาน" },
+            { branch: "Y0062-Tesco Lotus Pakchong", id: "303843", name: "วาสนา ขุนอินทร์", nickname: "กบ" },
+            { branch: "Y0090-Central Nakhonsawan", id: "303846", name: "วิจิตรา วันปลั่ง", nickname: "ส้ม" },
+            { branch: "Y0010-Future Park Rangsit", id: "303848", name: "ศุภจิต ทับทิมทอง", nickname: "มด" },
+            { branch: "Y0006-Central Plaza Lardprao", id: "303850", name: "ปรียาณัฐ แสงโชติ", nickname: "อั้ม" }
+        ];
+
+        // Create Maps for quick lookup
+        const courseMap = new Map(courseData.map(course => [course.code, course])); // Map by code
+        const employeeMap = new Map(employeeData.map(emp => [emp.id, emp]));
+
+        // Global variable to store the row index when editing
+        let editingRowIndex = null;
+
+        // Get necessary HTML elements
+        const bookingForm = document.getElementById('bookingForm');
+        const bookingDateInput = document.getElementById('bookingDate');
+        const customerNameInput = document.getElementById('customerName');
+        const contactNumberInput = document.getElementById('contactNumber');
+        const courseCodeSelect = document.getElementById('courseCodeSelect');
+        const courseNameAutoInput = document.getElementById('courseNameAuto');
+        const serviceEmpIdInput = document.getElementById('serviceEmpId');
+        const serviceEmpNameInput = document.getElementById('serviceEmpName');
+        const bookingEmpIdInput = document.getElementById('bookingEmpId');
+        const bookingEmpNameInput = document.getElementById('bookingEmpName');
+        const timeUsedInput = document.getElementById('timeUsed');
+        const commissionInput = document.getElementById('commission');
+        const bookingTimeInput = document.getElementById('bookingTime');
+        const roomUsedSelect = document.getElementById('roomUsed');
+        const statusSelect = document.getElementById('status');
+        const notesInput = document.getElementById('notes');
+
+        const searchQueryInput = document.getElementById('searchQuery');
+        const searchBookingsBtn = document.getElementById('searchBookingsBtn');
+        const searchResultsTableBody = document.getElementById('searchResultsTableBody');
+        const newBookingBtn = document.getElementById('newBookingBtn');
+
+        // Function to populate the course code dropdown
+        function populateCourseDropdown() {
+            // Sort courseData by code for better user experience
+            courseData.sort((a, b) => a.code.localeCompare(b.code));
+            courseData.forEach(course => {
+                const option = document.createElement('option');
+                option.value = course.code;
+                option.textContent = course.code; // Display code in dropdown
+                courseCodeSelect.appendChild(option);
+            });
+        }
+
+        // Event listener when a course code is selected
+        courseCodeSelect.addEventListener('change', () => {
+            const selectedCourseCode = courseCodeSelect.value;
+            const selectedCourse = courseMap.get(selectedCourseCode);
+            if (selectedCourse) {
+                courseNameAutoInput.value = selectedCourse.name; // Populate course name automatically
+                timeUsedInput.value = selectedCourse.time;
+                commissionInput.value = selectedCourse.commission;
+            } else {
+                courseNameAutoInput.value = '';
+                timeUsedInput.value = '';
+                commissionInput.value = '';
+            }
+        });
+
+        // Event listener when service employee ID is entered
+        serviceEmpIdInput.addEventListener('input', () => {
+            const empId = serviceEmpIdInput.value;
+            const employee = employeeMap.get(empId);
+            if (employee) {
+                serviceEmpNameInput.value = employee.name;
+            } else {
+                serviceEmpNameInput.value = '';
+            }
+        });
+
+        // Event listener when booking employee ID is entered
+        bookingEmpIdInput.addEventListener('input', () => {
+            const empId = bookingEmpIdInput.value;
+            const employee = employeeMap.get(empId);
+            if (employee) {
+                bookingEmpNameInput.value = employee.name;
+            } else {
+                bookingEmpNameInput.value = '';
+            }
+        });
+
+        // Function to reset the form and clear editing state
+        function resetFormForNewBooking() {
+            bookingForm.reset();
+            courseNameAutoInput.value = '';
+            serviceEmpNameInput.value = '';
+bookingEmpNameInput.value = '';
+            timeUsedInput.value = '';
+            commissionInput.value = '';
+            editingRowIndex = null; // Clear editing state
+            // Set current date as default for bookingDate
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            bookingDateInput.value = `${yyyy}-${mm}-${dd}`;
+        }
+
+        // Function to handle response from Google Apps Script (JSONP Callback for add/update)
+        window.handleResponse = function(response) {
+            Swal.close(); // Close loading dialog
+            if (response.result === 'success') {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'ดำเนินการสำเร็จ!',
+                    text: editingRowIndex ? 'ข้อมูลการจองถูกแก้ไขเรียบร้อยแล้ว' : 'ข้อมูลการจองถูกบันทึกเรียบร้อยแล้ว',
+                    confirmButtonColor: '#2e5283'
+                });
+                resetFormForNewBooking(); // Reset form for new booking
+                // Re-run search if there was a query
+                if (searchQueryInput.value) {
+                    searchBookings(searchQueryInput.value);
+                } else {
+                    searchResultsTableBody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-gray-500">กรุณาค้นหาการจอง</td></tr>`;
+                }
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด!',
+                    text: 'ไม่สามารถดำเนินการได้: ' + (response.error || 'Unknown error'),
+                    confirmButtonColor: '#2e5283'
+                });
+            }
+        };
+
+        // Event listener for form submission
+        bookingForm.addEventListener('submit', (event) => {
+            event.preventDefault(); // Prevent default form submission
+
+            Swal.fire({
+                title: editingRowIndex ? 'กำลังแก้ไขข้อมูล...' : 'กำลังบันทึกข้อมูล...',
+                text: 'กรุณารอสักครู่',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            const formData = {
+                date: bookingDateInput.value,
+                customerName: customerNameInput.value,
+                contactNumber: contactNumberInput.value,
+                courseCode: courseCodeSelect.value,
+                courseBooked: courseNameAutoInput.value,
+                serviceEmpId: serviceEmpIdInput.value,
+                serviceEmpName: serviceEmpNameInput.value,
+                timeUsed: timeUsedInput.value,
+                commission: commissionInput.value,
+                bookingTime: bookingTimeInput.value,
+                roomUsed: roomUsedSelect.value,
+                status: statusSelect.value,
+                bookingEmpId: bookingEmpIdInput.value,
+                bookingEmpName: bookingEmpNameInput.value,
+                notes: notesInput.value
+            };
+
+            let action = 'addBooking';
+            if (editingRowIndex !== null) {
+                action = 'updateBooking';
+                formData.rowIndex = editingRowIndex; // Add row index for updating
+            }
+
+            const params = new URLSearchParams(formData).toString();
+            // IMPORTANT: Replace this URL with your actual Google Apps Script Web App URL
+            const jsonpUrl = `https://script.google.com/macros/s/AKfycbyA3xtzZ7T_-5F_xnRlnyjragIe3_PcCldHCdlsaxDcQSaDWAjm-G7YrcNZW94FginKIw/exec?callback=handleResponse&action=${action}&${params}`;
+
+            const script = document.createElement('script');
+            script.src = jsonpUrl;
+            document.body.appendChild(script);
+            script.onload = () => {
+                document.body.removeChild(script);
+            };
+            script.onerror = () => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาดในการเชื่อมต่อ!',
+                    text: 'ไม่สามารถติดต่อกับเซิร์ฟเวอร์ได้',
+                    confirmButtonColor: '#2e5283'
+                });
+                document.body.removeChild(script);
+            };
+        });
+
+        // Function to search for bookings
+        window.searchBookings = function(query) {
+            searchResultsTableBody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-gray-500">กำลังค้นหาข้อมูล...</td></tr>`;
+
+            // IMPORTANT: Replace this URL with your actual Google Apps Script Web App URL
+            const jsonpUrl = `https://script.google.com/macros/s/AKfycbyA3xtzZ7T_-5F_xnRlnyjragIe3_PcCldHCdlsaxDcQSaDWAjm-G7YrcNZW94FginKIw/exec?callback=handleSearchResults&action=searchBookings&query=${encodeURIComponent(query)}`;
+
+            const script = document.createElement('script');
+            script.src = jsonpUrl;
+            document.body.appendChild(script);
+            script.onload = () => {
+                document.body.removeChild(script);
+            };
+            script.onerror = () => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด!',
+                    text: 'ไม่สามารถค้นหาข้อมูลได้',
+                    confirmButtonColor: '#2e5283'
+                });
+                searchResultsTableBody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-gray-500">ไม่สามารถโหลดข้อมูลได้</td></tr>`;
+            };
+        };
+
+        // Callback function for search results
+        window.handleSearchResults = function(response) {
+            searchResultsTableBody.innerHTML = ''; // Clear old data
+            if (response && response.data && response.data.length > 0) {
+                response.data.forEach(booking => {
+                    const row = searchResultsTableBody.insertRow();
+                    row.className = 'border-b border-gray-200 hover:bg-gray-50';
+                    row.innerHTML = `
+                        <td class="py-3 px-4 text-sm text-gray-700">${booking.date || ''}</td>
+                        <td class="py-3 px-4 text-sm text-gray-700">${booking.bookingTime || ''}</td>
+                        <td class="py-3 px-4 text-sm text-gray-700">${booking.customerName || ''}</td>
+                        <td class="py-3 px-4 text-sm text-gray-700">${booking.courseBooked || ''}</td>
+                        <td class="py-3 px-4 text-sm text-gray-700">${booking.status || ''}</td>
+                        <td class="py-3 px-4 text-sm text-gray-700">
+                            <button class="edit-btn bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded-md text-xs" data-row-index="${booking.rowIndex}">แก้ไข</button>
+                        </td>
+                    `;
+                });
+                // Add event listeners to edit buttons
+                document.querySelectorAll('.edit-btn').forEach(button => {
+                    button.addEventListener('click', (event) => {
+                        const rowIndex = event.target.dataset.rowIndex;
+                        const selectedBooking = response.data.find(b => b.rowIndex == rowIndex);
+                        if (selectedBooking) {
+                            loadBookingForEdit(selectedBooking);
+                        }
+                    });
+                });
+            } else {
+                searchResultsTableBody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-gray-500">ไม่พบข้อมูลการจอง</td></tr>`;
+            }
+        };
+
+        // Function to load booking data into the form for editing
+        function loadBookingForEdit(booking) {
+            bookingDateInput.value = booking.date || '';
+            customerNameInput.value = booking.customerName || '';
+            contactNumberInput.value = booking.contactNumber || '';
+            courseCodeSelect.value = booking.courseCode || '';
+            // Manually trigger change to update dependent fields
+            courseCodeSelect.dispatchEvent(new Event('change'));
+            serviceEmpIdInput.value = booking.serviceEmpId || '';
+            serviceEmpIdInput.dispatchEvent(new Event('input')); // Trigger to update name
+            bookingTimeInput.value = booking.bookingTime || '';
+            roomUsedSelect.value = booking.roomUsed || '';
+            statusSelect.value = booking.status || '';
+            bookingEmpIdInput.value = booking.bookingEmpId || '';
+            bookingEmpIdInput.dispatchEvent(new Event('input')); // Trigger to update name
+            notesInput.value = booking.notes || '';
+
+            editingRowIndex = booking.rowIndex; // Store the row index for update
+            Swal.fire({
+                icon: 'info',
+                title: 'โหลดข้อมูลสำเร็จ',
+                text: 'ตอนนี้คุณสามารถแก้ไขข้อมูลและกดบันทึกได้',
+                confirmButtonColor: '#2e5283'
+            });
+        }
+
+        // Initialize when the page is fully loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            populateCourseDropdown(); // Populate course dropdown
+            resetFormForNewBooking(); // Set current date and clear form for initial use
+
+            // Add event listener for the search button
+            searchBookingsBtn.addEventListener('click', () => {
+                const query = searchQueryInput.value.trim();
+                if (query) {
+                    searchBookings(query);
+                } else {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'กรุณากรอกข้อมูล',
+                        text: 'โปรดกรอกชื่อลูกค้าหรือเบอร์ติดต่อเพื่อค้นหา',
+                        confirmButtonColor: '#2e5283'
+                    });
+                }
+            });
+
+            // Add event listener for the "New Booking" button
+            newBookingBtn.addEventListener('click', () => {
+                resetFormForNewBooking();
+                searchResultsTableBody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-gray-500">กรุณาค้นหาการจอง</td></tr>`;
+                searchQueryInput.value = ''; // Clear search query
+            });
+        });
+    </script>
+</body>
+</html>
